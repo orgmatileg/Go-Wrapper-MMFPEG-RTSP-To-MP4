@@ -1,4 +1,4 @@
-module go-rstp-to-mp4
+module go-rtsp-to-mp4
 
 go 1.13
 

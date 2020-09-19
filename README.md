@@ -6,7 +6,10 @@ So basically this app does:
 - Stream Multiple camera via RTSP with FFMPEG to .mp4
 - Delete recorded camera videos with retention time, configurable in config.yaml.
 
+Requirement:
+- You need have ffmpeg installed on your computer/vps/instance/container
+
 Need help?
 
-Ask me on Discord
+Ask me on Discord. 
 https://discord.gg/uJ5FY8N

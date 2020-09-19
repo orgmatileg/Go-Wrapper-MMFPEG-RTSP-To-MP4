@@ -2,18 +2,51 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
+
+	"github.com/spf13/viper"
 )
 
-const (
-	CameraURL1 = "add camera rtsp"
-	CameraURL2 = "add camera rtsp"
-)
+// Camera ...
+type Camera struct {
+	Name   string `mapstructure:"name"`
+	Server string `mapstructure:"server"`
+	CMD    *exec.Cmd
+}
+
+// Start ...
+func (c *Camera) Start() error { return c.CMD.Start() }
+
+// Stop ...
+func (c *Camera) Stop() error { return c.CMD.Wait() }
+
+// Config ...
+type Config struct {
+	Cameras []*Camera `mapstructure:"cameras"`
+}
+
+var config Config
+
+func initConfig() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+	if err := viper.ReadInConfig(); err != nil {
+		panic(fmt.Errorf("viper: %s", err.Error()))
+	}
+
+	if err := viper.Unmarshal(&config); err != nil {
+		panic(fmt.Errorf("viper: %s", err.Error()))
+	}
+}
 
 func main() {
+
+	initConfig()
 
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
@@ -25,24 +58,21 @@ func main() {
 		done <- true
 	}()
 
-	cmd1 := exec.Command("ffmpeg", "-i", CameraURL1, "-acodec", "aac", "-vcodec", "copy", "-f", "mp4", "-y", "camera1.mp4")
-	cmd1.Dir = "/home/hakim/project/siswamedia/go-rstp-to-mp4"
+	for i, c := range config.Cameras {
+		filename := fmt.Sprintf("%s.mp4", c.Name)
+		config.Cameras[i].CMD = exec.Command("ffmpeg", "-i", c.Server, "-acodec", "aac", "-vcodec", "copy", "-f", "mp4", "-y", filename)
+		cwd, _ := os.Getwd()
+		config.Cameras[i].CMD.Dir = cwd
 
-	cmd2 := exec.Command("ffmpeg", "-i", CameraURL2, "-acodec", "aac", "-vcodec", "copy", "-f", "mp4", "-y", "camera2.mp4")
-	cmd2.Dir = "/home/hakim/project/siswamedia/go-rstp-to-mp4"
-
-	err := cmd1.Start()
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	err = cmd2.Start()
-	if err != nil {
-		fmt.Println(err.Error())
+		if err := c.Start(); err != nil {
+			log.Println("camera: " + err.Error())
+		}
 	}
 
 	<-done
-	cmd1.Wait()
-	cmd2.Wait()
-
+	for _, c := range config.Cameras {
+		if err := c.Stop(); err != nil {
+			log.Println("camera: " + err.Error())
+		}
+	}
 }

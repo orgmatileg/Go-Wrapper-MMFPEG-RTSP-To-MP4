@@ -1,4 +1,5 @@
-store_data: /opt/go-wrapper-ffmpeg-rtsp-to-mp4/data
+retention_file: 48 # Hour
+max_video_length: 6h
 cameras:
   - name: camera-01
     server: rtsp://freja.hiof.no:1935/rtplive/_definst_/hessdalen03.stream

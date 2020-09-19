@@ -16,6 +16,6 @@ RUN apk add  --no-cache ffmpeg
 WORKDIR /opt/go-wrapper-ffmpeg-rtsp-to-mp4/
 
 COPY --from=builder /app/app .
-COPY --from=builder /app/config.yml config.yml
+COPY --from=builder /app/config.yaml config.yaml
 
 ENTRYPOINT [ "/opt/go-wrapper-ffmpeg-rtsp-to-mp4/app"]
